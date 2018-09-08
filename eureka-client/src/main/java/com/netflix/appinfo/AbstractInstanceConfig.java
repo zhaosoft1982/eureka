@@ -45,6 +45,9 @@ public abstract class AbstractInstanceConfig implements EurekaInstanceConfig {
      * 契约过期时间，单位：秒
      */
     private static final int LEASE_EXPIRATION_DURATION_SECONDS = 90;
+    /**
+     * 租约续约频率，单位：秒。
+     */
     private static final int LEASE_RENEWAL_INTERVAL_SECONDS = 30;
     private static final boolean SECURE_PORT_ENABLED = false;
     private static final boolean NON_SECURE_PORT_ENABLED = true;
