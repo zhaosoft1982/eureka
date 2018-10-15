@@ -28,7 +28,7 @@ import com.netflix.eureka.registry.AbstractInstanceRegistry;
  * out of {@link AbstractInstanceRegistry}. This is key to instances receiving traffic
  * or not.
  * <p>
- *
+ * 租约管理器接口，提供租约的注册、续租、取消( 主动下线 )、过期( 过期下线 )。
  * @author Karthik Ranganathan, Greg Kim
  *
  * @param <T>

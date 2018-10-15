@@ -37,13 +37,32 @@ public class Lease<T> {
     };
 
     public static final int DEFAULT_DURATION_IN_SECS = 90;
-
+    /**
+     * 实体
+     * 租约的持有者。在 Eureka-Server 里，暂时只有 InstanceInfo 使用。
+     */
     private T holder;
+    /**
+     * 取消注册时间戳
+     */
     private long evictionTimestamp;
+    /**
+     * 注册时间戳
+     */
     private long registrationTimestamp;
+    /**
+     * 开始服务时间戳
+     */
     private long serviceUpTimestamp;
+    /**
+     * 最后更新时间戳
+     */
     // Make it volatile so that the expiration task would see this quicker
     private volatile long lastUpdateTimestamp;
+    /**
+     * 租约持续时长，单位：毫秒
+     * 租约持续时间，单位：毫秒。当租约过久未续租，即当前时间 - lastUpdatedTimestamp > duration 时，租约过期。
+     */
     private long duration;
 
     public Lease(T r, int durationInSecs) {
@@ -57,6 +76,7 @@ public class Lease<T> {
     /**
      * Renew the lease, use renewal duration if it was specified by the
      * associated {@link T} during registration, otherwise default duration is
+     * 设置租约最后更新时间( 续租 )
      * {@link #DEFAULT_DURATION_IN_SECS}.
      */
     public void renew() {

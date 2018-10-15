@@ -36,7 +36,9 @@ import com.netflix.appinfo.InstanceInfo.InstanceStatus;
  */
 @Singleton
 public class StatusFilter implements Filter {
-
+    /**
+     * 当 Eureka-Server 未处于开启( InstanceStatus.UP )状态，返回 HTTP 状态码 307 重定向
+     */
     private static final int SC_TEMPORARY_REDIRECT = 307;
 
     /*
