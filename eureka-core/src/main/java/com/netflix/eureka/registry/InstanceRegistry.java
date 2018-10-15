@@ -82,6 +82,7 @@ public interface InstanceRegistry extends LeaseManager<InstanceInfo>, LookupServ
 
     int isBelowRenewThresold();
 
+    // ====== µ÷ÊÔ/¼à¿ØÏà¹Ø ======
     List<Pair<Long, String>> getLastNRegisteredInstances();
 
     List<Pair<Long, String>> getLastNCanceledInstances();
