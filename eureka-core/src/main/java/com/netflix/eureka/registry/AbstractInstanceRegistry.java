@@ -95,7 +95,11 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
      */
     // CircularQueues here for debugging/statistics purposes only
     private final CircularQueue<Pair<Long, String>> recentRegisteredQueue;
-
+    /**
+     * 最近取消注册的调试队列，用于 Eureka-Server 运维界面的显示，无实际业务逻辑使用
+     * key ：添加时的时间戳
+     * value ：字符串 = 应用名(应用实例信息编号)
+     */
     private final CircularQueue<Pair<Long, String>> recentCanceledQueue;
     /**
      * 最近租约变更记录队列
@@ -105,6 +109,13 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private final Lock read = readWriteLock.readLock();
     private final Lock write = readWriteLock.writeLock();
+    /**
+     * 自我保护机制锁
+     *
+     * 当计算如下参数时使用：
+     *  1. {@link #numberOfRenewsPerMinThreshold}
+     *  2. {@link #expectedNumberOfClientsSendingRenews}
+     */
     protected final Object lock = new Object();
 
     private Timer deltaRetentionTimer = new Timer("Eureka-DeltaRetentionTimer", true);
@@ -116,11 +127,19 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
      * 自我保护机制
      */
     private final MeasuredRate renewsLastMin;
-
+    /**
+     * 清理租约过期任务
+     */
     private final AtomicReference<EvictionTask> evictionTaskRef = new AtomicReference<EvictionTask>();
 
     protected String[] allKnownRemoteRegions = EMPTY_STR_ARRAY;
+    /**
+     * 期望最小每分钟续租次数
+     */
     protected volatile int numberOfRenewsPerMinThreshold;
+    /**
+     * 期望最大每分钟续租次数
+     */
     protected volatile int expectedNumberOfClientsSendingRenews;
 
     protected final EurekaServerConfig serverConfig;
@@ -317,7 +336,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
      * This is normally invoked by a client when it shuts down informing the
      * server to remove the instance from traffic.
      * </p>
-     *
+     * 下线应用实例信息
      * @param appName the application name of the application.
      * @param id the unique identifier of the instance.
      * @param isReplication true if this is a replication event from other nodes, false
@@ -336,26 +355,34 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
      */
     protected boolean internalCancel(String appName, String id, boolean isReplication) {
         try {
+            // 获得读锁
             read.lock();
+            // 增加 取消注册次数 到 监控
             CANCEL.increment(isReplication);
+            // 移除 租约映射
             Map<String, Lease<InstanceInfo>> gMap = registry.get(appName);
             Lease<InstanceInfo> leaseToCancel = null;
             if (gMap != null) {
                 leaseToCancel = gMap.remove(id);
             }
+            // 添加到 最近取消注册的调试队列
             synchronized (recentCanceledQueue) {
                 recentCanceledQueue.add(new Pair<Long, String>(System.currentTimeMillis(), appName + "(" + id + ")"));
             }
+            // 移除 应用实例覆盖状态映射
             InstanceStatus instanceStatus = overriddenInstanceStatusMap.remove(id);
             if (instanceStatus != null) {
                 logger.debug("Removed instance id {} from the overridden map which has value {}", id, instanceStatus.name());
             }
+            // 租约不存在
             if (leaseToCancel == null) {
-                CANCEL_NOT_FOUND.increment(isReplication);
+                CANCEL_NOT_FOUND.increment(isReplication); // 添加 取消注册不存在 到 监控
                 logger.warn("DS: Registry: cancel failed because Lease is not registered for: {}/{}", appName, id);
-                return false;
+                return false; // 失败
             } else {
+                // 设置 租约的取消注册时间戳
                 leaseToCancel.cancel();
+                // 添加到 最近租约变更记录队列
                 InstanceInfo instanceInfo = leaseToCancel.getHolder();
                 String vip = null;
                 String svip = null;
@@ -366,11 +393,13 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                     vip = instanceInfo.getVIPAddress();
                     svip = instanceInfo.getSecureVipAddress();
                 }
+                // 设置 响应缓存 过期
                 invalidateCache(appName, vip, svip);
                 logger.info("Cancelled instance {}/{} (replication={})", appName, id, isReplication);
                 return true;
             }
         } finally {
+            // 释放锁
             read.unlock();
         }
     }
@@ -1260,6 +1289,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
 
     protected void postInit() {
         renewsLastMin.start();
+        // 初始化 清理租约过期任务
         if (evictionTaskRef.get() != null) {
             evictionTaskRef.get().cancel();
         }
