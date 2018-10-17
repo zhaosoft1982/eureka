@@ -138,6 +138,7 @@ public class InstanceInfo {
     private volatile String hostName;
     private volatile InstanceStatus status = InstanceStatus.UP;
     private volatile InstanceStatus overriddenStatus = InstanceStatus.UNKNOWN;
+    //每次 InstanceInfo 发生属性变化时，标记 isInstanceInfoDirty 属性为 true
     @XStreamOmitField
     private volatile boolean isInstanceInfoDirty = false;
     private volatile LeaseInfo leaseInfo;
@@ -1161,6 +1162,7 @@ public class InstanceInfo {
         if (this.status != status) {
             InstanceStatus prev = this.status;
             this.status = status;
+            // 设置 应用实例信息 数据一致
             setIsDirty();
             return prev;
         }

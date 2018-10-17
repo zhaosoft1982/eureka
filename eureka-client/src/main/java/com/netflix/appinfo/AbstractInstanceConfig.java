@@ -49,8 +49,17 @@ public abstract class AbstractInstanceConfig implements EurekaInstanceConfig {
      * 租约续约频率，单位：秒。
      */
     private static final int LEASE_RENEWAL_INTERVAL_SECONDS = 30;
+    /**
+     * 应用 https 端口关闭
+     */
     private static final boolean SECURE_PORT_ENABLED = false;
+    /**
+     * 应用 http 端口开启
+     */
     private static final boolean NON_SECURE_PORT_ENABLED = true;
+    /**
+     * 应用初始化后开启
+     */
     private static final int NON_SECURE_PORT = 80;
     private static final int SECURE_PORT = 443;
     private static final boolean INSTANCE_ENABLED_ON_INIT = false;

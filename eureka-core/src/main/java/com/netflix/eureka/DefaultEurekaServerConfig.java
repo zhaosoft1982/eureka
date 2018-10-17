@@ -194,6 +194,7 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
      * (non-Javadoc)
      *
      * @see com.netflix.eureka.EurekaServerConfig#shouldEnableSelfPreservation()
+     * 是否开启自我保护机制
      */
     @Override
     public boolean shouldEnableSelfPreservation() {

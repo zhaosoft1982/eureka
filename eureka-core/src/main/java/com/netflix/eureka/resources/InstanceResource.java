@@ -281,8 +281,7 @@ public class InstanceResource {
     public Response cancelLease(
             @HeaderParam(PeerEurekaNode.HEADER_REPLICATION) String isReplication) {
         try {
-            boolean isSuccess = registry.cancel(app.getName(), id,
-                "true".equals(isReplication));
+            boolean isSuccess = registry.cancel(app.getName(), id, "true".equals(isReplication));
 
             if (isSuccess) {
                 logger.debug("Found (Cancel): {} - {}", app.getName(), id);

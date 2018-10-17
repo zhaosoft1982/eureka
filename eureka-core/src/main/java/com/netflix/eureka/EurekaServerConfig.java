@@ -260,7 +260,7 @@ public interface EurekaServerConfig {
     /**
      * Get the time interval with which the task that expires instances should
      * wake up and run.
-     *
+     * 清理租约过期任务执行频率
      * @return time in milliseconds.
      */
     long getEvictionIntervalTimerInMs();

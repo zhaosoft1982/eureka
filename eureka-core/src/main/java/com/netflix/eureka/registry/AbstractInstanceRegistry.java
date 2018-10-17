@@ -650,6 +650,10 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
         evict(0l);
     }
 
+    /**
+     * 执行清理过期租约逻辑
+     * @param additionalLeaseMs
+     */
     public void evict(long additionalLeaseMs) {
         logger.debug("Running the evict task");
 
@@ -658,6 +662,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
             return;
         }
 
+        // 获得 所有过期的租约
         // We collect first all expired items, to evict them in random order. For large eviction sets,
         // if we do not that, we might wipe out whole apps before self preservation kicks in. By randomizing it,
         // the impact should be evenly distributed across all applications.
@@ -674,16 +679,18 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
             }
         }
 
+        // 计算 最大允许清理租约数量
         // To compensate for GC pauses or drifting local time, we need to use current registry size as a base for
         // triggering self-preservation. Without that we would wipe out full registry.
         int registrySize = (int) getLocalRegistrySize();
         int registrySizeThreshold = (int) (registrySize * serverConfig.getRenewalPercentThreshold());
         int evictionLimit = registrySize - registrySizeThreshold;
-
+        // 计算 清理租约数量
         int toEvict = Math.min(expiredLeases.size(), evictionLimit);
         if (toEvict > 0) {
             logger.info("Evicting {} items (expired={}, evictionLimit={})", toEvict, expiredLeases.size(), evictionLimit);
-
+            // 逐个过期 传入当前时间为种子生成随机，避免 Java 的伪随机情况
+            // 随机清理过期的租约。由于租约是按照应用顺序添加到数组，通过随机的方式，尽量避免单个应用被全部过期
             Random random = new Random(System.currentTimeMillis());
             for (int i = 0; i < toEvict; i++) {
                 // Pick a random item (Knuth shuffle algorithm)
@@ -695,6 +702,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                 String id = lease.getHolder().getId();
                 EXPIRED.increment();
                 logger.warn("DS: Registry: expired lease for {}/{}", appName, id);
+                //下线已过期的租约
                 internalCancel(appName, id, false);
             }
         }
@@ -1315,14 +1323,18 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     /* visible for testing */ class EvictionTask extends TimerTask {
-
+        /**
+         * 最后任务执行时间
+         */
         private final AtomicLong lastExecutionNanosRef = new AtomicLong(0l);
 
         @Override
         public void run() {
             try {
+                // 获取 补偿时间毫秒数
                 long compensationTimeMs = getCompensationTimeMs();
                 logger.info("Running the evict task with compensationTime {}ms", compensationTimeMs);
+                // 清理过期租约逻辑
                 evict(compensationTimeMs);
             } catch (Throwable e) {
                 logger.error("Could not run the evict task", e);
