@@ -56,7 +56,7 @@ import com.thoughtworks.xstream.annotations.XStreamImplicit;
  * {@link InstanceStatus#UP} status as specified by the configuration
  * {@link EurekaClientConfig#shouldFilterOnlyUpInstances()}.
  * </p>
- *
+ * 注册的应用集合
  * @author Karthik Ranganathan
  *
  */
@@ -79,11 +79,20 @@ public class Applications {
     }
 
     private static final String STATUS_DELIMITER = "_";
-
+    /**
+     * 应用集合信息 hashcode
+     */
     private String appsHashCode;
     private Long versionDelta;
+    /**
+     * 应用队列
+     */
     @XStreamImplicit
     private final AbstractQueue<Application> applications;
+    /**
+     * 应用映射
+     * key：应用名
+     */
     private final Map<String, Application> appNameApplicationMap;
     private final Map<String, VipIndexSupport> virtualHostNameAppMap;
     private final Map<String, VipIndexSupport> secureVirtualHostNameAppMap;
