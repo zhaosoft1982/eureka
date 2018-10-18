@@ -18,12 +18,25 @@ public class Key {
     public enum EntityType {
         Application, VIP, SVIP
     }
-
+    /**
+     * 实体名
+     */
     private final String entityName;
     private final String[] regions;
+    /**
+     * 请求参数类型
+     */
     private final KeyType requestType;
+    /**
+     * 请求 API 版本号
+     */
     private final Version requestVersion;
     private final String hashKey;
+    /**
+     * 实体类型
+     *
+     * {@link EntityType}
+     */
     private final EntityType entityType;
     private final EurekaAccept eurekaAccept;
 

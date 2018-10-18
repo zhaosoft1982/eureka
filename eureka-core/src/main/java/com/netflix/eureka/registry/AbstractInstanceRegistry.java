@@ -803,7 +803,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
      * @param remoteRegions The remote regions for which the instances are to be queried. The instances may be limited
      *                      by a whitelist as explained above. If <code>null</code> or empty no remote regions are
      *                      included.
-     *
+     * 获得注册的应用集合
      * @return The applications with instances from the passed remote regions as well as local region. The instances
      * from remote regions can be only for certain whitelisted apps as explained above.
      */
@@ -819,6 +819,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
         } else {
             GET_ALL_CACHE_MISS.increment();
         }
+        // 获得注册的应用集合
         Applications apps = new Applications();
         apps.setVersion(1L);
         for (Entry<String, Map<String, Lease<InstanceInfo>>> entry : registry.entrySet()) {
@@ -866,6 +867,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                 }
             }
         }
+        // 设置 应用集合 hashcode
         apps.setAppsHashCode(apps.getReconcileHashCode());
         return apps;
     }

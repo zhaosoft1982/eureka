@@ -328,6 +328,9 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
      * {@link EurekaServerConfig#getWaitTimeInMsWhenSyncEmpty()}, if it cannot
      * get the registry information from the peer eureka nodes at start up.
      *
+     * Eureka-Server 启动完成，但是未处于就绪( Ready )状态，不接受请求全量应用注册信息的请求.
+     * 例如，Eureka-Server 启动时，未能从其他 Eureka-Server 集群的节点获取到应用注册信息。
+     *
      * @return false - if the instances count from a replica transfer returned
      *         zero and if the wait time has not elapsed, otherwise returns true
      */

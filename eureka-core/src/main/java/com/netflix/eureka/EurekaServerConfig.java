@@ -43,7 +43,7 @@ public interface EurekaServerConfig {
      * Gets the <em>AWS Access Id</em>. This is primarily used for
      * <em>Elastic IP Biding</em>. The access id should be provided with
      * appropriate AWS permissions to bind the EIP.
-     *
+     * AWS 使用
      * @return
      */
     String getAWSAccessId();
@@ -299,6 +299,8 @@ public interface EurekaServerConfig {
      * Gets the time for which the registry payload should be kept in the cache
      * if it is not invalidated by change events.
      *
+     * 配置 eureka.responseCacheAutoExpirationInSeconds ，设置写入过期时长。默认值 ：180 秒。
+     *
      * @return time in seconds.
      */
     long getResponseCacheAutoExpirationInSeconds();
@@ -306,7 +308,7 @@ public interface EurekaServerConfig {
     /**
      * Gets the time interval with which the payload cache of the client should
      * be updated.
-     *
+     * 设置任务执行频率，默认值 ：30 * 1000 毫秒。
      * @return time in milliseconds.
      */
     long getResponseCacheUpdateIntervalMs();
@@ -651,6 +653,7 @@ public interface EurekaServerConfig {
     String getJsonCodecName();
 
     /**
+     * XML 编解码器名
      * @return the class name of the full xml codec to use for the server. If none set a default codec will be used
      */
     String getXmlCodecName();

@@ -80,7 +80,13 @@ public class Applications {
 
     private static final String STATUS_DELIMITER = "_";
     /**
-     * 应用集合信息 hashcode
+     * 应用集合一致性哈希码。
+     * 增量获取注册的应用集合( Applications ) 时，Eureka-Client 会获取到：
+     * Eureka-Server 近期变化( 注册、下线 )的应用集合
+     * Eureka-Server 应用集合一致性哈希码
+     * Eureka-Client 将变化的应用集合和本地缓存的应用集合进行合并后进行计算本地的应用集合一致性哈希码。若两个哈希码相等，意味着增量获取成功；
+     * 若不相等，意味着增量获取失败，Eureka-Client 重新和 Eureka-Server 全量获取应用集合。
+     * Eureka 比较应用集合一致性哈希码，和日常我们通过哈希码比较两个对象是否相等类似
      */
     private String appsHashCode;
     private Long versionDelta;
@@ -240,8 +246,10 @@ public class Applications {
      */
     @JsonIgnore
     public String getReconcileHashCode() {
+        // 计数集合 key：应用实例状态
         TreeMap<String, AtomicInteger> instanceCountMap = new TreeMap<String, AtomicInteger>();
         populateInstanceCountMap(instanceCountMap);
+        // 计算 hashcode
         return getReconcileHashCode(instanceCountMap);
     }
 
@@ -255,6 +263,7 @@ public class Applications {
     public void populateInstanceCountMap(Map<String, AtomicInteger> instanceCountMap) {
         for (Application app : this.getRegisteredApplications()) {
             for (InstanceInfo info : app.getInstancesAsIsFromEureka()) {
+                // 计数
                 AtomicInteger instanceCount = instanceCountMap.computeIfAbsent(info.getStatus().name(),
                         k -> new AtomicInteger(0));
                 instanceCount.incrementAndGet();
@@ -274,8 +283,8 @@ public class Applications {
     public static String getReconcileHashCode(Map<String, AtomicInteger> instanceCountMap) {
         StringBuilder reconcileHashCode = new StringBuilder(75);
         for (Map.Entry<String, AtomicInteger> mapEntry : instanceCountMap.entrySet()) {
-            reconcileHashCode.append(mapEntry.getKey()).append(STATUS_DELIMITER).append(mapEntry.getValue().get())
-                    .append(STATUS_DELIMITER);
+            reconcileHashCode.append(mapEntry.getKey()).append(STATUS_DELIMITER)
+                    .append(mapEntry.getValue().get()).append(STATUS_DELIMITER);
         }
         return reconcileHashCode.toString();
     }
@@ -285,7 +294,7 @@ public class Applications {
      * in the same order.
      * 
      * @param filterUpInstances
-     *            whether to return only UP instances
+     *            whether to return only UP instances  是否过滤，只返回UP状态的实例
      */
     public void shuffleInstances(boolean filterUpInstances) {
         shuffleInstances(filterUpInstances, false, null, null, null);
